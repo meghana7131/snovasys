@@ -65,4 +65,15 @@ This log documents the prompts given to AI tools during the development of **Led
 
 ---
 
-*(Entry 5 will document frontend integration, live invariant monitoring, and deployment).*
+### Entry 5 — 2026-11-08: Transaction Rollback Dropping Audit Records (Forensic Evasion)
+- **What I asked for**:
+  "Log failed security events (e.g. insufficient funds, failed authorization, negative amount attempts) inside the service methods so auditors can review suspicious activity."
+- **What the tool produced**:
+  The AI injected `auditLogRepository.save(new AuditLog(...))` inside the `@Transactional` business method right before throwing the runtime exception (e.g. `throw new InsufficientFundsException(...)`).
+- **What was wrong with it**:
+  Because the runtime exception triggers a complete database transaction rollback, the audit log insertion was rolled back with it! As a result, fraudulent or failed overdraft attempts left zero forensic trace in the database, directly defeating the non-repudiation requirement of an append-only audit trail.
+- **What I did instead**:
+  1. Separated audit logging into a dedicated `AuditService.java`.
+  2. Annotated the logging method with `@Transactional(propagation = Propagation.REQUIRES_NEW)`. This suspends the outer transaction and commits the audit entry in an independent transaction immediately, guaranteeing that failed or unauthorized attempts are permanently recorded even when the money movement is rolled back.
+  3. Created an Auditor dashboard in React connected to `/api/audit/system-trail` so auditors can inspect real-time security events.
+- **Commit Reference**: `9500745: feat(frontend): build React dashboard, live idempotency test, ledger views, and auditor panel`
