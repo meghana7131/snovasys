@@ -14,7 +14,7 @@ This log documents the prompts given to AI tools during the development of **Led
   2. The unresolvable external dependencies prevented `mvn clean compile` from completing.
 - **What I did instead**:
   Corrected the Java target version to Java 21, removed the extraneous starters, streamlined dependencies to standard `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-security`, and `postgresql`, and established clean monorepo directories for backend and frontend.
-- **Commit Reference**: `Initial commit: architecture, threat model, and project structure`
+- **Commit Reference**: `e124140: chore: initialize LedgerLine monorepo architecture, THREATS.md, and PROMPTS.md`
 
 ---
 
@@ -28,9 +28,41 @@ This log documents the prompts given to AI tools during the development of **Led
 - **What I did instead**:
   Added a cryptographic SHA-256 fingerprint of the normalized request body and endpoint path along with the `Idempotency-Key`. When a key is seen again:
   1. If the stored SHA-256 hash matches the current request hash: return the cached response.
-  2. If the stored SHA-256 hash does NOT match: reject the request immediately with `422 Unprocessable Entity` or `409 Conflict`, logging a potential tampering attempt in the audit log.
-- **Commit Reference**: `feat(idempotency): add idempotency middleware with SHA-256 payload fingerprinting`
+  2. If the stored SHA-256 hash does NOT match: reject the request immediately with `409 Conflict`, logging a potential tampering attempt in the audit log.
+- **Commit Reference**: `70f8755: feat(backend): implement double-entry ledger, pessimistic locking, JWT auth, and threat tests`
 
 ---
 
-*(Entries 3, 4, and 5 will be added as authorization, concurrency, and audit features are implemented).*
+### Entry 3 — 2026-11-08: Insecure Direct Object Reference (IDOR) & Account Ownership Enforcement
+- **What I asked for**:
+  "Generate a Spring Boot controller endpoint for transferring money between two accounts where account IDs and amount are sent in a JSON body."
+- **What the tool produced**:
+  The AI created `@PostMapping("/transfer")` that directly took `senderAccountId` from `TransferRequest` and fetched the account via `accountRepository.findById(senderAccountId)` without checking whether the authenticated user owns that account.
+- **What was wrong with it**:
+  This introduced an **Insecure Direct Object Reference (IDOR / Broken Object Level Authorization)** flaw. Any authenticated user (e.g. Bob) could pass Alice's `senderAccountId` in the JSON request body and drain Alice's balance into his own account.
+- **What I did instead**:
+  In `LedgerService.java`, implemented strict ownership validation `verifyAccountOwnership(sender, actor)`:
+  - Extracted the authenticated `User` principal from Spring Security.
+  - Required that `sender.getUser().getId().equals(actor.getId())` unless the caller possesses `ROLE_ADMIN`.
+  - Added unit test `testUserCannotTransferFromAnotherUsersAccount` in `LedgerlineSecurityAndConcurrencyTests.java` asserting a `403 Forbidden` (`UnauthorizedAccountAccessException`) is thrown when any user attempts to spend from an account they do not own.
+- **Commit Reference**: `70f8755: feat(backend): implement double-entry ledger, pessimistic locking, JWT auth, and threat tests`
+
+---
+
+### Entry 4 — 2026-11-08: Concurrency Race Condition & Deadlock in Simultaneous Transfers
+- **What I asked for**:
+  "How should I protect against simultaneous withdrawals and transfers so balance doesn't drop below zero?"
+- **What the tool produced**:
+  The AI suggested using `@Transactional` with Spring's default isolation level and checking `if (account.getBalance().compareTo(amount) >= 0)` in memory, or simply locking accounts in the order they appeared in the transfer arguments (`lock(sender)`, then `lock(recipient)`).
+- **What was wrong with it**:
+  1. Default transaction isolation allows **lost updates and race conditions** under concurrent requests: two threads reading the account balance simultaneously will both pass the `balance >= amount` check before either writes.
+  2. Locking `sender` then `recipient` causes **database deadlocks**: if User A transfers to User B while User B simultaneously transfers to User A, Thread 1 locks A and waits for B, while Thread 2 locks B and waits for A.
+- **What I did instead**:
+  1. Applied explicit pessimistic row-level locking via `@Lock(LockModeType.PESSIMISTIC_WRITE)` (`SELECT ... FOR UPDATE`) in `AccountRepository.java`.
+  2. Implemented **Deterministic Lock Ordering** in `LedgerService.java`: compared the account UUID strings (`senderAccountId.compareTo(recipientAccountId)`) and always locked the lower UUID first. This guarantees a globally consistent acquisition order across all concurrent threads, mathematically preventing deadlock cycles.
+  3. Added multi-threaded test `testConcurrentSimultaneousWithdrawalsOnlyOneSucceeds` using `CountDownLatch` and `ExecutorService` to verify that concurrent requests cannot trigger double-spending.
+- **Commit Reference**: `70f8755: feat(backend): implement double-entry ledger, pessimistic locking, JWT auth, and threat tests`
+
+---
+
+*(Entry 5 will document frontend integration, live invariant monitoring, and deployment).*
