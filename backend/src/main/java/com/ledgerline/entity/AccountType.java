@@ -5,3 +5,4 @@ public enum AccountType {
     USER_SAVINGS,
     SYSTEM_RESERVE
 }
+

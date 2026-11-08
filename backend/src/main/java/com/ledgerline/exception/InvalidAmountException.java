@@ -5,3 +5,4 @@ public class InvalidAmountException extends RuntimeException {
         super(message);
     }
 }
+

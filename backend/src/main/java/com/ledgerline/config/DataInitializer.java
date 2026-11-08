@@ -46,3 +46,4 @@ public class DataInitializer implements CommandLineRunner {
         accountRepository.save(new Account(bob, "ACC-BOB-202", AccountType.USER_CHECKING, new BigDecimal("500.00"), "USD"));
     }
 }
+

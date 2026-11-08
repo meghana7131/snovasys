@@ -185,3 +185,4 @@ public class LedgerlineSecurityAndConcurrencyTests {
         assertEquals(0, initialTotal.compareTo(finalTotal), "Total money in system must be strictly conserved after transfer");
     }
 }
+

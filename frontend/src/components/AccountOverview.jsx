@@ -74,3 +74,4 @@ export default function AccountOverview({ accounts, onSelectAccount, onOpenTrans
     </div>
   );
 }
+

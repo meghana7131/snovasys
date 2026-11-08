@@ -66,3 +66,4 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok("Profile retrieved", profile));
     }
 }
+

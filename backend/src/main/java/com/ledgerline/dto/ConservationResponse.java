@@ -23,3 +23,4 @@ public class ConservationResponse {
     public String getStatusMessage() { return statusMessage; }
     public Instant getAuditedAt() { return auditedAt; }
 }
+

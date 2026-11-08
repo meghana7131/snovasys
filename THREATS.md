@@ -25,3 +25,4 @@ This document details the threat model for **LedgerLine** based on the **STRIDE*
 2. **Attempt Double Spend**: Fire two simultaneous `cURL` or test requests for \$100 against an account with \$100 $\rightarrow$ Exactly one request returns `200 OK`, the second returns `400 Insufficient Funds`.
 3. **Attempt Replay**: Send the exact same POST request with identical `Idempotency-Key` $\rightarrow$ Second call returns the cached original response without creating new ledger entries.
 4. **Attempt Role Escalation**: Access `/api/audit/system-trail` with a `USER` token $\rightarrow$ Server responds `403 Forbidden`. Access with an `AUDITOR` token $\rightarrow$ Server responds `200 OK`.
+

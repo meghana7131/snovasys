@@ -32,3 +32,4 @@ public class AccountResponse {
     public String getCurrency() { return currency; }
     public Instant getCreatedAt() { return createdAt; }
 }
+

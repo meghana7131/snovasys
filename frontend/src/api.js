@@ -118,3 +118,4 @@ export const api = {
     return apiRequest('/health');
   }
 };
+

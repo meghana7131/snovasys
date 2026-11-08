@@ -72,3 +72,4 @@ export default function Header({ user, onSwitchUser, onLogout, conservation }) {
     </header>
   );
 }
+

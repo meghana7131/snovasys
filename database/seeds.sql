@@ -23,3 +23,4 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Initial Conservation Baseline Constant:
 -- Total System Money = 100,000 + 1,000 + 500 = $101,500.00
+

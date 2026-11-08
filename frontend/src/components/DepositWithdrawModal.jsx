@@ -95,3 +95,4 @@ export default function DepositWithdrawModal({ mode, account, onClose, onSuccess
     </div>
   );
 }
+

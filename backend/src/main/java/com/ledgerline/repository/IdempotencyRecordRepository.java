@@ -12,3 +12,4 @@ public interface IdempotencyRecordRepository extends JpaRepository<IdempotencyRe
     Optional<IdempotencyRecord> findByKey(String key);
     Optional<IdempotencyRecord> findByKeyAndUserId(String key, UUID userId);
 }
+

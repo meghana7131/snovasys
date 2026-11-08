@@ -24,3 +24,4 @@ public class HealthController {
         return ResponseEntity.ok(ApiResponse.ok("System healthy", status));
     }
 }
+

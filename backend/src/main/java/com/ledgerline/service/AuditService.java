@@ -36,3 +36,4 @@ public class AuditService {
         return auditLogRepository.findAllByActorIdOrderByCreatedAtDesc(actorId);
     }
 }
+

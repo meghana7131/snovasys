@@ -12,3 +12,4 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> 
     List<LedgerEntry> findAllByTransactionId(UUID transactionId);
     List<LedgerEntry> findAllByAccountIdOrderByCreatedAtDesc(UUID accountId);
 }
+

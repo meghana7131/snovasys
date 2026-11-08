@@ -5,3 +5,4 @@ public class LedgerImbalanceException extends RuntimeException {
         super(message);
     }
 }
+
