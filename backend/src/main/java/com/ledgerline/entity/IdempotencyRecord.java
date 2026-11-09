@@ -12,7 +12,7 @@ public class IdempotencyRecord {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "key", nullable = false, unique = true, length = 255)
+    @Column(name = "idempotency_key", nullable = false, unique = true, length = 255)
     private String key;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

@@ -26,3 +26,4 @@ curl -s -H "Authorization: Bearer $AUDITOR_TOKEN" "$BASE_URL/api/audit/conservat
 echo "========================================================"
 echo "          ALL SCRIPT TESTS EXECUTED SUCCESSFULLY         "
 echo "========================================================"
+

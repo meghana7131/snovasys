@@ -60,7 +60,7 @@ CREATE INDEX IF NOT EXISTS idx_ledger_entries_account_id ON ledger_entries(accou
 -- 5. Idempotency Keys (Replay & Tampering Prevention)
 CREATE TABLE IF NOT EXISTS idempotency_keys (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    key VARCHAR(255) UNIQUE NOT NULL,
+    idempotency_key VARCHAR(255) UNIQUE NOT NULL,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     request_hash VARCHAR(64) NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN ('PROCESSING', 'COMPLETED', 'FAILED')),
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS idempotency_keys (
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_idempotency_keys_key ON idempotency_keys(key);
+CREATE INDEX IF NOT EXISTS idx_idempotency_keys_key ON idempotency_keys(idempotency_key);
 
 -- 6. Append-Only Audit Trail
 CREATE TABLE IF NOT EXISTS audit_logs (

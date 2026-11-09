@@ -42,6 +42,15 @@ public class LedgerlineSecurityAndConcurrencyTests {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    private LedgerEntryRepository ledgerEntryRepository;
+
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private IdempotencyRecordRepository idempotencyRecordRepository;
+
     private User alice;
     private User bob;
     private User auditor;
@@ -51,7 +60,11 @@ public class LedgerlineSecurityAndConcurrencyTests {
 
     @BeforeEach
     void setUp() {
-        // Clean state
+        // Clean state in child-to-parent order to respect FK constraints
+        idempotencyRecordRepository.deleteAll();
+        auditLogRepository.deleteAll();
+        ledgerEntryRepository.deleteAll();
+        transactionRepository.deleteAll();
         accountRepository.deleteAll();
         userRepository.deleteAll();
 

@@ -130,3 +130,4 @@ Assert-Result "Audit Trail Records Security & Transfer Events" ($auditTrail.data
 Write-Host "`n========================================================" -ForegroundColor Cyan
 Write-Host "            ALL 10 VERIFICATION TESTS COMPLETE           " -ForegroundColor Cyan
 Write-Host "========================================================`n" -ForegroundColor Cyan
+
