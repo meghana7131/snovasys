@@ -1,5 +1,6 @@
 package com.ledgerline.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -7,6 +8,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "accounts")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Account {
 
     @Id

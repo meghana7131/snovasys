@@ -1,11 +1,13 @@
 package com.ledgerline.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "audit_logs")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AuditLog {
 
     @Id
