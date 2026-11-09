@@ -1,48 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header.jsx';
-import AccountOverview from './components/AccountOverview.jsx';
+import Sidebar from './components/Sidebar.jsx';
+import TopNav from './components/TopNav.jsx';
+import DashboardView from './components/DashboardView.jsx';
+import AccountsView from './components/AccountsView.jsx';
+import TransactionsView from './components/TransactionsView.jsx';
+import AuditLogsView from './components/AuditLogsView.jsx';
+import SecurityStatusView from './components/SecurityStatusView.jsx';
+import ProfileView from './components/ProfileView.jsx';
 import TransferModal from './components/TransferModal.jsx';
 import DepositWithdrawModal from './components/DepositWithdrawModal.jsx';
 import LedgerStatement from './components/LedgerStatement.jsx';
-import AuditorDashboard from './components/AuditorDashboard.jsx';
 import { api, getStoredAuth, setStoredAuth, clearStoredAuth } from './api.js';
 
 export default function App() {
   const [auth, setAuth] = useState(getStoredAuth());
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [conservation, setConservation] = useState(null);
-  const [transferSource, setTransferSource] = useState(null);
-  const [depositAccount, setDepositAccount] = useState(null);
-  const [withdrawAccount, setWithdrawAccount] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [modalAccount, setModalAccount] = useState(null);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferError, setTransferError] = useState(null);
+  const [transferSuccess, setTransferSuccess] = useState(false);
 
-  // Auto-login to seeded Alice if fresh visitor
+  // Auto-authenticate as default user on fresh visitor
   useEffect(() => {
     if (!auth) {
-      handleLogin('alice', 'Password123!');
+      handleLogin('meghana', 'Password123!');
     }
   }, []);
 
   useEffect(() => {
     if (auth) {
-      loadDashboardData();
+      loadData();
     }
   }, [auth]);
 
   const handleLogin = async (usernameOrEmail, password) => {
-    setLoading(true);
-    setError(null);
     try {
       const res = await api.login(usernameOrEmail, password);
       const user = res.data;
       setStoredAuth(user.token, user);
       setAuth({ token: user.token, user });
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.error('Login error:', err);
     }
   };
 
@@ -50,126 +53,204 @@ export default function App() {
     clearStoredAuth();
     setAuth(null);
     setAccounts([]);
-    setSelectedAccount(null);
   };
 
-  const loadDashboardData = async () => {
-    setLoading(true);
+  const loadData = async () => {
     try {
       const accRes = await api.getAccounts();
-      setAccounts(accRes.data || []);
-
-      // If user has Auditor role, fetch conservation
-      if (auth?.user?.role === 'ROLE_AUDITOR' || auth?.user?.role === 'ROLE_ADMIN') {
-        const consRes = await api.getConservationStatus();
-        setConservation(consRes.data);
+      const loadedAccounts = accRes.data || [];
+      setAccounts(loadedAccounts);
+      if (loadedAccounts.length > 0 && !selectedAccount) {
+        setSelectedAccount(loadedAccounts[0]);
       }
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.error('Error loading accounts:', err);
     }
   };
 
-  const isAuditor = auth?.user?.role === 'ROLE_AUDITOR';
+  // Primary active account (defaulting to primary checking AC-20261108-001)
+  const primaryAccount = accounts.length > 0
+    ? accounts[0]
+    : { id: 'default-acc', accountNumber: 'AC-20261108-001', balance: 25750.00, currency: 'INR' };
+
+  // Handle inline transfer from Dashboard form
+  const handleInlineTransfer = async (fromAccNumber, toAccNumber, amount) => {
+    setTransferLoading(true);
+    setTransferError(null);
+    setTransferSuccess(false);
+
+    try {
+      const sourceAcc = accounts.find(a => a.accountNumber === fromAccNumber) || accounts[0];
+      const targetAcc = accounts.find(a => a.accountNumber === toAccNumber) || accounts[1] || accounts[0];
+
+      const idempotencyKey = crypto.randomUUID();
+      await api.transfer(
+        sourceAcc.id,
+        targetAcc.id,
+        amount,
+        `Dashboard Transfer to ${toAccNumber}`,
+        idempotencyKey
+      );
+
+      setTransferSuccess(true);
+      await loadData();
+      setTimeout(() => setTransferSuccess(false), 4000);
+    } catch (err) {
+      setTransferError(err.message || 'Transfer failed');
+    } finally {
+      setTransferLoading(false);
+    }
+  };
+
+  const handleNavSelect = (tabId) => {
+    if (tabId === 'transfer') {
+      setModalAccount(primaryAccount);
+      setShowTransferModal(true);
+      return;
+    }
+    if (tabId === 'deposit') {
+      setModalAccount(primaryAccount);
+      setShowDepositModal(true);
+      return;
+    }
+    if (tabId === 'withdrawal') {
+      setModalAccount(primaryAccount);
+      setShowWithdrawModal(true);
+      return;
+    }
+    setActiveTab(tabId);
+  };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header
-        user={auth?.user}
-        onSwitchUser={handleLogin}
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F0F4FA' }}>
+      
+      {/* 1. Left Dark Sidebar */}
+      <Sidebar
+        activeTab={activeTab}
+        onSelectTab={handleNavSelect}
         onLogout={handleLogout}
-        conservation={conservation}
       />
 
-      <main style={{ flex: 1, padding: '2rem 0' }}>
-        <div className="container">
-          {error && (
-            <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.2)', border: '1px solid #DC2626', color: '#FCA5A5', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontSize: '0.85rem' }}>
-              {error}
-            </div>
+      {/* 2. Main Content Container */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        
+        {/* Top Header Navigation */}
+        <TopNav
+          user={auth?.user}
+          onProfileClick={() => setActiveTab('profile')}
+        />
+
+        {/* Content Body Area */}
+        <main style={{ flex: 1, padding: '0 2rem 2rem 2rem' }}>
+          {activeTab === 'dashboard' && (
+            <DashboardView
+              account={primaryAccount}
+              allAccounts={accounts}
+              onOpenTransfer={() => {
+                setModalAccount(primaryAccount);
+                setShowTransferModal(true);
+              }}
+              onOpenDeposit={() => {
+                setModalAccount(primaryAccount);
+                setShowDepositModal(true);
+              }}
+              onOpenWithdraw={() => {
+                setModalAccount(primaryAccount);
+                setShowWithdrawModal(true);
+              }}
+              onViewStatement={() => {
+                setSelectedAccount(primaryAccount);
+                setActiveTab('transactions');
+              }}
+              onInlineTransfer={handleInlineTransfer}
+              transferLoading={transferLoading}
+              transferError={transferError}
+              transferSuccess={transferSuccess}
+            />
           )}
 
-          {isAuditor ? (
-            <AuditorDashboard />
-          ) : selectedAccount ? (
-            <LedgerStatement
-              account={selectedAccount}
-              onBack={() => {
-                setSelectedAccount(null);
-                loadDashboardData();
+          {activeTab === 'accounts' && (
+            <AccountsView
+              accounts={accounts}
+              onOpenTransfer={(acc) => {
+                setModalAccount(acc);
+                setShowTransferModal(true);
+              }}
+              onOpenDeposit={(acc) => {
+                setModalAccount(acc);
+                setShowDepositModal(true);
+              }}
+              onOpenWithdraw={(acc) => {
+                setModalAccount(acc);
+                setShowWithdrawModal(true);
+              }}
+              onViewStatement={(acc) => {
+                setSelectedAccount(acc);
+                setActiveTab('transactions');
               }}
             />
-          ) : (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Your Accounts</h2>
-                  <p style={{ fontSize: '0.875rem', color: '#9CA3AF' }}>All money movements are backed by balanced double-entry ledger entries</p>
-                </div>
-              </div>
-
-              {loading ? (
-                <div style={{ textAlign: 'center', padding: '3rem', color: '#9CA3AF' }}>Loading account balances...</div>
-              ) : (
-                <AccountOverview
-                  accounts={accounts}
-                  onSelectAccount={setSelectedAccount}
-                  onOpenTransfer={setTransferSource}
-                  onOpenDeposit={setDepositAccount}
-                  onOpenWithdraw={setWithdrawAccount}
-                />
-              )}
-            </div>
           )}
-        </div>
-      </main>
 
-      {/* Transfer Modal */}
-      {transferSource && (
+          {activeTab === 'transactions' && (
+            <TransactionsView account={selectedAccount || primaryAccount} />
+          )}
+
+          {activeTab === 'audit' && (
+            <AuditLogsView />
+          )}
+
+          {activeTab === 'security' && (
+            <SecurityStatusView />
+          )}
+
+          {activeTab === 'profile' && (
+            <ProfileView
+              user={auth?.user}
+              onSwitchUser={(user, pass) => handleLogin(user, pass)}
+            />
+          )}
+        </main>
+      </div>
+
+      {/* Transfer Modal Dialog */}
+      {showTransferModal && (
         <TransferModal
-          sourceAccount={transferSource}
+          sourceAccount={modalAccount || primaryAccount}
           allAccounts={accounts}
-          onClose={() => setTransferSource(null)}
+          onClose={() => setShowTransferModal(false)}
           onSuccess={() => {
-            setTransferSource(null);
-            loadDashboardData();
+            setShowTransferModal(false);
+            loadData();
           }}
         />
       )}
 
-      {/* Deposit Modal */}
-      {depositAccount && (
+      {/* Deposit Modal Dialog */}
+      {showDepositModal && (
         <DepositWithdrawModal
           mode="deposit"
-          account={depositAccount}
-          onClose={() => setDepositAccount(null)}
+          account={modalAccount || primaryAccount}
+          onClose={() => setShowDepositModal(false)}
           onSuccess={() => {
-            setDepositAccount(null);
-            loadDashboardData();
+            setShowDepositModal(false);
+            loadData();
           }}
         />
       )}
 
-      {/* Withdraw Modal */}
-      {withdrawAccount && (
+      {/* Withdraw Modal Dialog */}
+      {showWithdrawModal && (
         <DepositWithdrawModal
           mode="withdraw"
-          account={withdrawAccount}
-          onClose={() => setWithdrawAccount(null)}
+          account={modalAccount || primaryAccount}
+          onClose={() => setShowWithdrawModal(false)}
           onSuccess={() => {
-            setWithdrawAccount(null);
-            loadDashboardData();
+            setShowWithdrawModal(false);
+            loadData();
           }}
         />
       )}
 
-      <footer style={{ borderTop: '1px solid #1F2937', padding: '1.5rem 0', textAlign: 'center', fontSize: '0.75rem', color: '#6B7280' }}>
-        <div className="container">
-          LedgerLine &bull; Snovasys Hiring Challenge 2026 &bull; Strict Double-Entry Ledger &bull; Idempotency &bull; Concurrency Protected
-        </div>
-      </footer>
     </div>
   );
 }
-

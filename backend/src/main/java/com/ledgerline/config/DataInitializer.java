@@ -37,13 +37,16 @@ public class DataInitializer implements CommandLineRunner {
         // 1. Seed Users
         User admin = userRepository.save(new User("admin", "admin@ledgerline.internal", encodedPassword, Role.ROLE_ADMIN));
         User auditor = userRepository.save(new User("auditor", "auditor@ledgerline.internal", encodedPassword, Role.ROLE_AUDITOR));
+        User meghana = userRepository.save(new User("meghana", "meghana@ledgerline.internal", encodedPassword, Role.ROLE_USER));
         User alice = userRepository.save(new User("alice", "alice@example.com", encodedPassword, Role.ROLE_USER));
         User bob = userRepository.save(new User("bob", "bob@example.com", encodedPassword, Role.ROLE_USER));
 
         // 2. Seed Accounts
-        accountRepository.save(new Account(admin, "SYS-RESERVE-001", AccountType.SYSTEM_RESERVE, new BigDecimal("100000.00"), "USD"));
-        accountRepository.save(new Account(alice, "ACC-ALICE-101", AccountType.USER_CHECKING, new BigDecimal("1000.00"), "USD"));
-        accountRepository.save(new Account(bob, "ACC-BOB-202", AccountType.USER_CHECKING, new BigDecimal("500.00"), "USD"));
+        accountRepository.save(new Account(admin, "SYS-RESERVE-001", AccountType.SYSTEM_RESERVE, new BigDecimal("100000.00"), "INR"));
+        accountRepository.save(new Account(meghana, "AC-20261108-001", AccountType.USER_CHECKING, new BigDecimal("25750.00"), "INR"));
+        accountRepository.save(new Account(meghana, "AC-20261108-002", AccountType.USER_SAVINGS, new BigDecimal("15000.00"), "INR"));
+        accountRepository.save(new Account(alice, "ACC-ALICE-101", AccountType.USER_CHECKING, new BigDecimal("1000.00"), "INR"));
+        accountRepository.save(new Account(bob, "ACC-BOB-202", AccountType.USER_CHECKING, new BigDecimal("500.00"), "INR"));
     }
 }
 
