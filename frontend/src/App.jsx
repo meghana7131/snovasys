@@ -1,29 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar.jsx';
 import TopNav from './components/TopNav.jsx';
+import HomePage from './components/HomePage.jsx';
 import DashboardView from './components/DashboardView.jsx';
 import AccountsView from './components/AccountsView.jsx';
+import TransferView from './components/TransferView.jsx';
+import DepositView from './components/DepositView.jsx';
+import WithdrawalView from './components/WithdrawalView.jsx';
 import TransactionsView from './components/TransactionsView.jsx';
 import AuditLogsView from './components/AuditLogsView.jsx';
 import SecurityStatusView from './components/SecurityStatusView.jsx';
 import ProfileView from './components/ProfileView.jsx';
-import TransferModal from './components/TransferModal.jsx';
-import DepositWithdrawModal from './components/DepositWithdrawModal.jsx';
-import LedgerStatement from './components/LedgerStatement.jsx';
 import { api, getStoredAuth, setStoredAuth, clearStoredAuth } from './api.js';
 
 export default function App() {
   const [auth, setAuth] = useState(getStoredAuth());
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('home');
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showDepositModal, setShowDepositModal] = useState(false);
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [modalAccount, setModalAccount] = useState(null);
-  const [transferLoading, setTransferLoading] = useState(false);
-  const [transferError, setTransferError] = useState(null);
-  const [transferSuccess, setTransferSuccess] = useState(false);
 
   // Auto-authenticate as default user on fresh visitor
   useEffect(() => {
@@ -53,6 +47,7 @@ export default function App() {
     clearStoredAuth();
     setAuth(null);
     setAccounts([]);
+    setActiveTab('home');
   };
 
   const loadData = async () => {
@@ -73,183 +68,125 @@ export default function App() {
     ? accounts[0]
     : { id: 'default-acc', accountNumber: 'AC-20261108-001', balance: 25750.00, currency: 'INR' };
 
-  // Handle inline transfer from Dashboard form
-  const handleInlineTransfer = async (fromAccNumber, toAccNumber, amount) => {
-    setTransferLoading(true);
-    setTransferError(null);
-    setTransferSuccess(false);
+  const totalPortfolioBalance = accounts.reduce((acc, curr) => acc + (Number(curr.balance) || 0), 0);
 
-    try {
-      const sourceAcc = accounts.find(a => a.accountNumber === fromAccNumber) || accounts[0];
-      const targetAcc = accounts.find(a => a.accountNumber === toAccNumber) || accounts[1] || accounts[0];
-
-      const idempotencyKey = crypto.randomUUID();
-      await api.transfer(
-        sourceAcc.id,
-        targetAcc.id,
-        amount,
-        `Dashboard Transfer to ${toAccNumber}`,
-        idempotencyKey
-      );
-
-      setTransferSuccess(true);
-      await loadData();
-      setTimeout(() => setTransferSuccess(false), 4000);
-    } catch (err) {
-      setTransferError(err.message || 'Transfer failed');
-    } finally {
-      setTransferLoading(false);
-    }
-  };
-
-  const handleNavSelect = (tabId) => {
-    if (tabId === 'transfer') {
-      setModalAccount(primaryAccount);
-      setShowTransferModal(true);
-      return;
-    }
-    if (tabId === 'deposit') {
-      setModalAccount(primaryAccount);
-      setShowDepositModal(true);
-      return;
-    }
-    if (tabId === 'withdrawal') {
-      setModalAccount(primaryAccount);
-      setShowWithdrawModal(true);
-      return;
-    }
-    setActiveTab(tabId);
+  const handleAccountAction = (acc) => {
+    setSelectedAccount(acc);
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F0F4FA' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F4F7FC' }}>
       
       {/* 1. Left Dark Sidebar */}
       <Sidebar
         activeTab={activeTab}
-        onSelectTab={handleNavSelect}
+        onSelectTab={(tabId) => setActiveTab(tabId)}
         onLogout={handleLogout}
       />
 
       {/* 2. Main Content Container */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowX: 'hidden' }}>
         
         {/* Top Header Navigation */}
         <TopNav
           user={auth?.user}
+          activeTab={activeTab}
           onProfileClick={() => setActiveTab('profile')}
         />
 
-        {/* Content Body Area */}
-        <main style={{ flex: 1, padding: '0 2rem 2rem 2rem' }}>
+        {/* Content Body Area - Renders Dedicated Page per tab */}
+        <main style={{ flex: 1, padding: '0 2rem 2.5rem 2rem' }}>
+          
+          {/* Home / Showcase Landing Page */}
+          {activeTab === 'home' && (
+            <HomePage
+              onNavigate={(tab) => setActiveTab(tab)}
+              primaryAccount={primaryAccount}
+              totalBalance={totalPortfolioBalance || 25750}
+            />
+          )}
+
+          {/* Executive Dashboard */}
           {activeTab === 'dashboard' && (
             <DashboardView
               account={primaryAccount}
               allAccounts={accounts}
-              onOpenTransfer={() => {
-                setModalAccount(primaryAccount);
-                setShowTransferModal(true);
-              }}
-              onOpenDeposit={() => {
-                setModalAccount(primaryAccount);
-                setShowDepositModal(true);
-              }}
-              onOpenWithdraw={() => {
-                setModalAccount(primaryAccount);
-                setShowWithdrawModal(true);
-              }}
-              onViewStatement={() => {
-                setSelectedAccount(primaryAccount);
-                setActiveTab('transactions');
-              }}
-              onInlineTransfer={handleInlineTransfer}
-              transferLoading={transferLoading}
-              transferError={transferError}
-              transferSuccess={transferSuccess}
+              onNavigate={(tab) => setActiveTab(tab)}
+              onSelectAccountForAction={handleAccountAction}
             />
           )}
 
+          {/* Dedicated Accounts Page */}
           {activeTab === 'accounts' && (
             <AccountsView
               accounts={accounts}
-              onOpenTransfer={(acc) => {
-                setModalAccount(acc);
-                setShowTransferModal(true);
-              }}
-              onOpenDeposit={(acc) => {
-                setModalAccount(acc);
-                setShowDepositModal(true);
-              }}
-              onOpenWithdraw={(acc) => {
-                setModalAccount(acc);
-                setShowWithdrawModal(true);
-              }}
-              onViewStatement={(acc) => {
-                setSelectedAccount(acc);
-                setActiveTab('transactions');
-              }}
+              onNavigate={(tab) => setActiveTab(tab)}
+              onSelectAccountForAction={handleAccountAction}
             />
           )}
 
+          {/* Dedicated Money Transfer Page */}
+          {activeTab === 'transfer' && (
+            <TransferView
+              accounts={accounts}
+              primaryAccount={selectedAccount || primaryAccount}
+              onTransferSuccess={loadData}
+              onNavigate={(tab) => setActiveTab(tab)}
+            />
+          )}
+
+          {/* Dedicated Deposits Page */}
+          {activeTab === 'deposit' && (
+            <DepositView
+              accounts={accounts}
+              primaryAccount={selectedAccount || primaryAccount}
+              onDepositSuccess={loadData}
+              onNavigate={(tab) => setActiveTab(tab)}
+            />
+          )}
+
+          {/* Dedicated Withdrawals Page */}
+          {activeTab === 'withdrawal' && (
+            <WithdrawalView
+              accounts={accounts}
+              primaryAccount={selectedAccount || primaryAccount}
+              onWithdrawSuccess={loadData}
+              onNavigate={(tab) => setActiveTab(tab)}
+            />
+          )}
+
+          {/* Dedicated Transaction History Page */}
           {activeTab === 'transactions' && (
-            <TransactionsView account={selectedAccount || primaryAccount} />
+            <TransactionsView
+              account={selectedAccount || primaryAccount}
+              onNavigate={(tab) => setActiveTab(tab)}
+            />
           )}
 
+          {/* Dedicated Audit Logs Page */}
           {activeTab === 'audit' && (
-            <AuditLogsView />
+            <AuditLogsView
+              onNavigate={(tab) => setActiveTab(tab)}
+            />
           )}
 
+          {/* Dedicated Security Page */}
           {activeTab === 'security' && (
-            <SecurityStatusView />
+            <SecurityStatusView
+              onNavigate={(tab) => setActiveTab(tab)}
+            />
           )}
 
+          {/* Dedicated Profile & Roles Page */}
           {activeTab === 'profile' && (
             <ProfileView
               user={auth?.user}
               onSwitchUser={(user, pass) => handleLogin(user, pass)}
             />
           )}
+
         </main>
       </div>
-
-      {/* Transfer Modal Dialog */}
-      {showTransferModal && (
-        <TransferModal
-          sourceAccount={modalAccount || primaryAccount}
-          allAccounts={accounts}
-          onClose={() => setShowTransferModal(false)}
-          onSuccess={() => {
-            setShowTransferModal(false);
-            loadData();
-          }}
-        />
-      )}
-
-      {/* Deposit Modal Dialog */}
-      {showDepositModal && (
-        <DepositWithdrawModal
-          mode="deposit"
-          account={modalAccount || primaryAccount}
-          onClose={() => setShowDepositModal(false)}
-          onSuccess={() => {
-            setShowDepositModal(false);
-            loadData();
-          }}
-        />
-      )}
-
-      {/* Withdraw Modal Dialog */}
-      {showWithdrawModal && (
-        <DepositWithdrawModal
-          mode="withdraw"
-          account={modalAccount || primaryAccount}
-          onClose={() => setShowWithdrawModal(false)}
-          onSuccess={() => {
-            setShowWithdrawModal(false);
-            loadData();
-          }}
-        />
-      )}
 
     </div>
   );

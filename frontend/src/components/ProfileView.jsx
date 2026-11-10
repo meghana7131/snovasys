@@ -86,3 +86,4 @@ export default function ProfileView({ user, onSwitchUser }) {
     </div>
   );
 }
+

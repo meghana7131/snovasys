@@ -10,42 +10,28 @@ import {
   Zap,
   Building2,
   ListFilter,
-  Send,
   ShieldCheck,
   CheckCircle2,
   TrendingUp,
   CreditCard,
-  Shield
+  Shield,
+  ArrowRight,
+  ExternalLink
 } from 'lucide-react';
 
 export default function DashboardView({
   account,
-  allAccounts,
-  transactions,
-  onOpenTransfer,
-  onOpenDeposit,
-  onOpenWithdraw,
-  onViewStatement,
-  onInlineTransfer,
-  transferLoading,
-  transferError,
-  transferSuccess
+  allAccounts = [],
+  onNavigate,
+  onSelectAccountForAction
 }) {
-  const [targetAccount, setTargetAccount] = useState('AC-20261108-002');
-  const [inlineAmount, setInlineAmount] = useState('');
+  const [chartRange, setChartRange] = useState('1W');
 
   const balance = account?.balance ? Number(account.balance) : 25750;
   const accountNumber = account?.accountNumber || 'AC-20261108-001';
 
-  const handleInlineSubmit = (e) => {
-    e.preventDefault();
-    if (!inlineAmount || Number(inlineAmount) <= 0) return;
-    onInlineTransfer(accountNumber, targetAccount, inlineAmount);
-    setInlineAmount('');
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div className="page-animate" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '3rem' }}>
       
       {/* 1. Welcome & Assurance Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.25rem' }}>
@@ -73,26 +59,17 @@ export default function DashboardView({
             flexShrink: 0
           }}>
             <svg width="72" height="72" viewBox="0 0 64 64" fill="none">
-              {/* Background */}
               <circle cx="32" cy="32" r="32" fill="#C7D2FE" />
-              {/* Back Hair */}
               <path d="M17 28 C 15 11, 49 11, 47 28 C 48 40, 49 50, 49 50 L 15 50 C 15 50, 16 40, 17 28 Z" fill="#3E2723" />
-              {/* Neck */}
               <rect x="28" y="36" width="8" height="8" rx="2" fill="#FED7AA" />
-              {/* Purple Shirt */}
               <path d="M18 45 C 22 41, 42 41, 46 45 L 50 64 L 14 64 Z" fill="#6366F1" />
-              {/* Face */}
               <circle cx="32" cy="27" r="11" fill="#FED7AA" />
-              {/* Front Hair Bangs */}
               <path d="M21 24 C 23 16, 41 16, 43 24 C 39 19, 36 21, 32 21 C 28 21, 25 19, 21 24 Z" fill="#4E342E" />
               <path d="M20 25 C 21 34, 21 40, 23 43 C 21 39, 21 30, 20 25 Z" fill="#4E342E" />
               <path d="M44 25 C 43 34, 43 40, 41 43 C 43 39, 43 30, 44 25 Z" fill="#4E342E" />
-              {/* Eyes */}
               <circle cx="28.5" cy="27" r="1.2" fill="#1E293B" />
               <circle cx="35.5" cy="27" r="1.2" fill="#1E293B" />
-              {/* Smile */}
               <path d="M29.5 32 Q 32 34.5, 34.5 32" stroke="#EA580C" strokeWidth="1" strokeLinecap="round" fill="none" />
-              {/* Blush */}
               <circle cx="27" cy="29.5" r="1.5" fill="#FDA4AF" opacity="0.6" />
               <circle cx="37" cy="29.5" r="1.5" fill="#FDA4AF" opacity="0.6" />
             </svg>
@@ -148,19 +125,15 @@ export default function DashboardView({
           {/* Classic Bank Architectural Graphic */}
           <div style={{ opacity: 0.35, position: 'absolute', right: '12px', bottom: '-4px' }}>
             <svg width="120" height="90" viewBox="0 0 120 90" fill="none">
-              {/* Pediment (Triangle Roof) */}
               <polygon points="60,6 12,30 108,30" fill="#93C5FD" opacity="0.6" />
               <polygon points="60,12 24,28 96,28" fill="#DBEAFE" opacity="0.8" />
-              {/* Entablature Beam */}
               <rect x="10" y="30" width="100" height="6" fill="#DBEAFE" />
-              {/* Columns (6 Classical Pillars) */}
               <rect x="16" y="36" width="7" height="38" rx="1.5" fill="#BFDBFE" />
               <rect x="32" y="36" width="7" height="38" rx="1.5" fill="#BFDBFE" />
               <rect x="48" y="36" width="7" height="38" rx="1.5" fill="#BFDBFE" />
               <rect x="64" y="36" width="7" height="38" rx="1.5" fill="#BFDBFE" />
               <rect x="80" y="36" width="7" height="38" rx="1.5" fill="#BFDBFE" />
               <rect x="96" y="36" width="7" height="38" rx="1.5" fill="#BFDBFE" />
-              {/* Steps / Plinth */}
               <rect x="8" y="74" width="104" height="4" fill="#DBEAFE" />
               <rect x="4" y="78" width="112" height="4" fill="#93C5FD" />
               <rect x="0" y="82" width="120" height="6" fill="#60A5FA" opacity="0.7" />
@@ -170,7 +143,7 @@ export default function DashboardView({
 
       </div>
 
-      {/* 2. Top Metrics (3 Cards) & Quick Actions */}
+      {/* 2. Top Metrics (3 Cards) & Quick Navigation Actions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.25rem' }}>
         
         {/* Metric 1: Total Balance */}
@@ -211,7 +184,6 @@ export default function DashboardView({
             <span style={{ fontSize: '0.75rem', color: '#BFDBFE', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 600 }}>
               ↑ +2.5%
             </span>
-            {/* Sparkline wave */}
             <svg width="80" height="24" viewBox="0 0 80 24" fill="none">
               <path d="M2 18 Q 20 4, 40 14 T 78 6" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.8" />
             </svg>
@@ -306,7 +278,7 @@ export default function DashboardView({
           </div>
         </div>
 
-        {/* Quick Actions (2x2 Grid) */}
+        {/* Quick Actions (2x2 Grid) - Navigates to dedicated pages! */}
         <div className="app-card" style={{ gridColumn: 'span 3', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
             <Zap size={18} color="#4F46E5" fill="#4F46E5" />
@@ -316,7 +288,7 @@ export default function DashboardView({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
             
             <button
-              onClick={onOpenTransfer}
+              onClick={() => onNavigate('transfer')}
               style={{
                 backgroundColor: '#F1F5F9',
                 border: '1px solid #E2E8F0',
@@ -343,7 +315,7 @@ export default function DashboardView({
             </button>
 
             <button
-              onClick={onOpenDeposit}
+              onClick={() => onNavigate('deposit')}
               style={{
                 backgroundColor: '#F1F5F9',
                 border: '1px solid #E2E8F0',
@@ -370,7 +342,7 @@ export default function DashboardView({
             </button>
 
             <button
-              onClick={onOpenWithdraw}
+              onClick={() => onNavigate('withdrawal')}
               style={{
                 backgroundColor: '#F1F5F9',
                 border: '1px solid #E2E8F0',
@@ -397,7 +369,7 @@ export default function DashboardView({
             </button>
 
             <button
-              onClick={onViewStatement}
+              onClick={() => onNavigate('transactions')}
               style={{
                 backgroundColor: '#F1F5F9',
                 border: '1px solid #E2E8F0',
@@ -420,7 +392,7 @@ export default function DashboardView({
               }}
             >
               <FileText size={20} color="#0284C7" />
-              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1E293B' }}>View Statement</span>
+              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#1E293B' }}>Full Statement</span>
             </button>
 
           </div>
@@ -433,9 +405,34 @@ export default function DashboardView({
         
         {/* Balance Overview Area Spline Chart */}
         <div className="app-card" style={{ gridColumn: 'span 8', padding: '1.5rem', position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-            <TrendingUp size={20} color="#4F46E5" />
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A' }}>Balance Overview</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <TrendingUp size={20} color="#4F46E5" />
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A' }}>Balance Overview</h3>
+            </div>
+
+            {/* Time Filter Tabs */}
+            <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: '#F1F5F9', padding: '0.2rem', borderRadius: '0.5rem' }}>
+              {['1D', '1W', '1M', '1Y'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setChartRange(tab)}
+                  style={{
+                    border: 'none',
+                    background: chartRange === tab ? '#FFFFFF' : 'transparent',
+                    color: chartRange === tab ? '#4F46E5' : '#64748B',
+                    fontWeight: 700,
+                    fontSize: '0.72rem',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '0.35rem',
+                    cursor: 'pointer',
+                    boxShadow: chartRange === tab ? '0 1px 3px rgba(0,0,0,0.08)' : 'none'
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* SVG Spline Area Chart matching screenshot */}
@@ -547,7 +544,7 @@ export default function DashboardView({
 
             <div style={{ marginTop: '0.5rem' }}>
               <button
-                onClick={onViewStatement}
+                onClick={() => onNavigate('accounts')}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -561,7 +558,7 @@ export default function DashboardView({
                   gap: '0.25rem'
                 }}
               >
-                View Details →
+                Manage All Accounts →
               </button>
             </div>
           </div>
@@ -577,9 +574,8 @@ export default function DashboardView({
             position: 'relative',
             overflow: 'hidden'
           }}>
-            {/* Top row: Chip and Contactless Wave */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              {/* Gold EMV Chip with circuit pattern */}
+              {/* Gold EMV Chip */}
               <div style={{
                 width: '34px',
                 height: '26px',
@@ -596,7 +592,7 @@ export default function DashboardView({
                 <div style={{ position: 'absolute', top: '7px', bottom: '8px', left: '10px', width: '13px', borderRadius: '3px', border: '1px solid #CA8A04' }} />
               </div>
 
-              {/* Contactless wave icon like mockup */}
+              {/* Contactless wave icon */}
               <div style={{ display: 'flex', alignItems: 'center', opacity: 0.85 }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round">
                   <path d="M7 16 A 8 8 0 0 1 7 8" />
@@ -624,21 +620,32 @@ export default function DashboardView({
 
       </div>
 
-      {/* 4. Bottom Row: Recent Transactions, Money Transfer, Security Status */}
+      {/* 4. Bottom Row: Recent Transactions & Security Status */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.25rem' }}>
         
-        {/* Column 1: Recent Transactions */}
-        <div className="app-card" style={{ gridColumn: 'span 5', padding: '1.25rem' }}>
+        {/* Recent Transactions List */}
+        <div className="app-card" style={{ gridColumn: 'span 7', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <ListFilter size={18} color="#4F46E5" />
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>Recent Transactions</h3>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>Recent Activity</h3>
             </div>
             <button
-              onClick={onViewStatement}
-              style={{ background: 'none', border: 'none', color: '#4F46E5', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
+              onClick={() => onNavigate('transactions')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#4F46E5',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem'
+              }}
             >
-              View All →
+              <span>View Full History</span>
+              <ArrowRight size={14} />
             </button>
           </div>
 
@@ -694,144 +701,47 @@ export default function DashboardView({
           </div>
         </div>
 
-        {/* Column 2: Money Transfer Inline Form */}
-        <div className="app-card" style={{ gridColumn: 'span 4', padding: '1.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <Send size={18} color="#4F46E5" />
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>Money Transfer</h3>
-          </div>
-
-          {transferError && (
-            <div style={{ backgroundColor: '#FEE2E2', border: '1px solid #F87171', color: '#991B1B', padding: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
-              {transferError}
-            </div>
-          )}
-
-          {transferSuccess && (
-            <div style={{ backgroundColor: '#D1FAE5', border: '1px solid #34D399', color: '#065F46', padding: '0.5rem', borderRadius: '0.5rem', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
-              Transfer completed successfully! Books balanced.
-            </div>
-          )}
-
-          <form onSubmit={handleInlineSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#64748B', marginBottom: '0.3rem' }}>
-                From Account
-              </label>
-              <select className="app-select" value={accountNumber} readOnly>
-                <option>{accountNumber} (₹ {balance.toLocaleString('en-IN')})</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#64748B', marginBottom: '0.3rem' }}>
-                To Account
-              </label>
-              <select
-                className="app-select"
-                value={targetAccount}
-                onChange={(e) => setTargetAccount(e.target.value)}
-              >
-                <option value="AC-20261108-002">AC-20261108-002 (Savings)</option>
-                <option value="ACC-BOB-202">ACC-BOB-202 (External User)</option>
-                <option value="SYS-RESERVE-001">SYS-RESERVE-001 (Reserve Pool)</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 600, color: '#64748B', marginBottom: '0.3rem' }}>
-                Amount (₹)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                placeholder="Enter amount"
-                className="app-input"
-                value={inlineAmount}
-                onChange={(e) => setInlineAmount(e.target.value)}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={transferLoading}
-              style={{
-                width: '100%',
-                backgroundColor: '#4F46E5',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '0.625rem',
-                padding: '0.75rem',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
-                transition: 'all 0.2s ease',
-                marginTop: '0.25rem'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4338CA'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4F46E5'}
-            >
-              <Send size={15} color="#FFFFFF" />
-              <span>{transferLoading ? 'Processing...' : 'Transfer Now'}</span>
-            </button>
-          </form>
-        </div>
-
-        {/* Column 3: Security Status */}
-        <div className="app-card" style={{ gridColumn: 'span 3', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        {/* Security Status Card */}
+        <div className="app-card" style={{ gridColumn: 'span 5', padding: '1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <ShieldCheck size={18} color="#059669" />
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>Security Status</h3>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>Security Guarantees</h3>
               </div>
-              <span className="badge-pill badge-pill-success">All Secure</span>
+              <span className="badge-pill badge-pill-success">All Active</span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '0.75rem' }}>
               {[
-                'Idempotency Protection',
-                'Transaction Integrity',
-                'Double-Entry Ledger',
-                'Audit Logging',
-                'Role-Based Access Control'
-              ].map((text, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={16} color="#059669" fill="#D1FAE5" />
-                  <span style={{ fontSize: '0.75rem', color: '#334155', fontWeight: 500 }}>
-                    {text}
-                  </span>
+                { label: 'Idempotency Protection', desc: 'SHA-256 payload fingerprinting' },
+                { label: 'Concurrency Control', desc: 'Pessimistic row-level locking' },
+                { label: 'Double-Entry Invariant', desc: 'Debits == Credits mathematically guaranteed' },
+                { label: 'Append-Only Audit Log', desc: 'Immutable transaction evidence trail' },
+                { label: 'Role-Based Access Control', desc: 'Stateless signed JWT verification' }
+              ].map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckCircle2 size={15} color="#059669" fill="#D1FAE5" />
+                    <span style={{ fontSize: '0.75rem', color: '#1E293B', fontWeight: 600 }}>
+                      {item.label}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.68rem', color: '#94A3B8' }}>{item.desc}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* 3D Shield Graphic */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginTop: '1rem'
-          }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              backgroundColor: '#ECFDF5',
-              border: '2px solid #A7F3D0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 8px 16px rgba(16, 185, 129, 0.2)'
-            }}>
-              <ShieldCheck size={36} color="#059669" />
-            </div>
+          <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '1rem', marginTop: '1rem' }}>
+            <button
+              onClick={() => onNavigate('security')}
+              className="btn-secondary"
+              style={{ width: '100%', fontSize: '0.8rem' }}
+            >
+              <span>Open Security Testing Workbench</span>
+              <ArrowRight size={14} />
+            </button>
           </div>
         </div>
 

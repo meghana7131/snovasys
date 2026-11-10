@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Sparkles,
   LayoutDashboard,
   WalletCards,
   ArrowLeftRight,
@@ -15,11 +16,12 @@ import {
 
 export default function Sidebar({ activeTab, onSelectTab, onLogout }) {
   const menuItems = [
+    { id: 'home', label: 'Home', icon: Sparkles, badge: 'New' },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'accounts', label: 'Accounts', icon: WalletCards },
     { id: 'transfer', label: 'Money Transfer', icon: ArrowLeftRight },
-    { id: 'deposit', label: 'Deposit', icon: ArrowDownToLine },
-    { id: 'withdrawal', label: 'Withdrawal', icon: ArrowUpFromLine },
+    { id: 'deposit', label: 'Deposits', icon: ArrowDownToLine },
+    { id: 'withdrawal', label: 'Withdrawals', icon: ArrowUpFromLine },
     { id: 'transactions', label: 'Transactions', icon: Receipt },
     { id: 'audit', label: 'Audit Logs', icon: FileCheck2 },
     { id: 'security', label: 'Security Status', icon: ShieldCheck },
@@ -28,8 +30,8 @@ export default function Sidebar({ activeTab, onSelectTab, onLogout }) {
 
   return (
     <aside style={{
-      width: '240px',
-      backgroundColor: '#0D1326',
+      width: '250px',
+      backgroundColor: '#090D1A',
       color: '#94A3B8',
       display: 'flex',
       flexDirection: 'column',
@@ -37,27 +39,37 @@ export default function Sidebar({ activeTab, onSelectTab, onLogout }) {
       padding: '1.5rem 1rem',
       flexShrink: 0,
       minHeight: '100vh',
-      borderRight: '1px solid rgba(255, 255, 255, 0.05)'
+      borderRight: '1px solid rgba(255, 255, 255, 0.06)'
     }}>
       <div>
         {/* Brand Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem', paddingLeft: '0.5rem' }}>
+        <div
+          onClick={() => onSelectTab('home')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '2rem',
+            paddingLeft: '0.5rem',
+            cursor: 'pointer'
+          }}
+        >
           <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
+            width: '42px',
+            height: '42px',
+            borderRadius: '12px',
             background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.4)'
+            boxShadow: '0 4px 14px rgba(37, 99, 235, 0.45)'
           }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
           </div>
           <div>
-            <div style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '1.2rem', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+            <div style={{ color: '#FFFFFF', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
               LedgerLine
             </div>
             <div style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 500 }}>
@@ -67,7 +79,7 @@ export default function Sidebar({ activeTab, onSelectTab, onLogout }) {
         </div>
 
         {/* Menu Items */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -78,18 +90,19 @@ export default function Sidebar({ activeTab, onSelectTab, onLogout }) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.85rem',
-                  padding: '0.7rem 0.85rem',
-                  borderRadius: '0.65rem',
+                  justifyContent: 'space-between',
+                  padding: '0.68rem 0.85rem',
+                  borderRadius: '0.75rem',
                   backgroundColor: isActive ? '#4F46E5' : 'transparent',
                   color: isActive ? '#FFFFFF' : '#8E9BB0',
                   border: 'none',
                   cursor: 'pointer',
-                  fontWeight: isActive ? 600 : 500,
-                  fontSize: '0.875rem',
+                  fontWeight: isActive ? 700 : 500,
+                  fontSize: '0.85rem',
                   textAlign: 'left',
                   width: '100%',
-                  transition: 'all 0.15s ease'
+                  transition: 'all 0.15s ease',
+                  boxShadow: isActive ? '0 4px 12px rgba(79, 70, 229, 0.35)' : 'none'
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
@@ -104,8 +117,22 @@ export default function Sidebar({ activeTab, onSelectTab, onLogout }) {
                   }
                 }}
               >
-                <Icon size={18} color={isActive ? '#FFFFFF' : '#8E9BB0'} strokeWidth={isActive ? 2.2 : 1.8} />
-                <span>{item.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <Icon size={18} color={isActive ? '#FFFFFF' : '#8E9BB0'} strokeWidth={isActive ? 2.2 : 1.8} />
+                  <span>{item.label}</span>
+                </div>
+                {item.badge && (
+                  <span style={{
+                    fontSize: '0.62rem',
+                    fontWeight: 700,
+                    padding: '0.15rem 0.45rem',
+                    borderRadius: '9999px',
+                    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : '#4F46E5',
+                    color: '#FFFFFF'
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -115,15 +142,15 @@ export default function Sidebar({ activeTab, onSelectTab, onLogout }) {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.85rem',
-              padding: '0.7rem 0.85rem',
-              borderRadius: '0.65rem',
+              gap: '0.75rem',
+              padding: '0.68rem 0.85rem',
+              borderRadius: '0.75rem',
               backgroundColor: 'transparent',
               color: '#8E9BB0',
               border: 'none',
               cursor: 'pointer',
               fontWeight: 500,
-              fontSize: '0.875rem',
+              fontSize: '0.85rem',
               textAlign: 'left',
               width: '100%',
               marginTop: '0.5rem',
@@ -147,7 +174,7 @@ export default function Sidebar({ activeTab, onSelectTab, onLogout }) {
       {/* Bottom Security Card & Decorative Curve */}
       <div style={{ position: 'relative', marginTop: '1.5rem' }}>
         <div style={{
-          background: 'linear-gradient(180deg, #131C38 0%, #0F172A 100%)',
+          background: 'linear-gradient(180deg, #131C38 0%, #0B1021 100%)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '0.85rem',
           padding: '1.1rem 1rem',
